@@ -407,100 +407,119 @@ function OrionLib:MakeNotification(NotificationConfig)
 		NotificationConfig.Image   = NotificationConfig.Image   or "rbxassetid://4384403532"
 		NotificationConfig.Time    = NotificationConfig.Time    or 15
 
-		-- grab whatever theme you set via SetTheme()
-		local theme = OrionLib.Theme or OrionLib.Themes.RitualDefault
+		local theme = OrionLib.Theme or OrionLib.Themes.Default
 
 		local NotificationParent = SetProps(MakeElement("TFrame"), {
-			Size             = UDim2.new(1, 0, 0, 0),
-			AutomaticSize    = Enum.AutomaticSize.Y,
-			Parent           = NotificationHolder
+			Size          = UDim2.new(1, 0, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			Parent        = NotificationHolder
 		})
 
-		local NotificationFrame = SetChildren(SetProps(
-			MakeElement("RoundFrame", theme.Main, 0, 10), {
-				Parent                  = NotificationParent, 
-				Size                    = UDim2.new(1, 0, 0, 0),
-				Position                = UDim2.new(1, -55, 0, 0),
-				BackgroundTransparency  = 0,
-				AutomaticSize           = Enum.AutomaticSize.Y
-		}), {
-			-- use theme.Stroke instead of hard-coded grey
-			MakeElement("Stroke", theme.Stroke, 1.2),
-			MakeElement("Padding", 12, 12, 12, 12),
-
-			-- icon tinted in your bright text color
-			SetProps(MakeElement("Image", NotificationConfig.Image), {
-				Size         = UDim2.new(0, 20, 0, 20),
-				ImageColor3  = theme.Text,
-				Name         = "Icon"
+		local NotificationFrame = SetChildren(
+			SetProps(MakeElement("RoundFrame", theme.Main, 0, 10), {
+				Parent                 = NotificationParent,
+				Size                   = UDim2.new(1, 0, 0, 0),
+				Position               = UDim2.new(1, -55, 0, 0),
+				BackgroundTransparency = 0,
+				AutomaticSize          = Enum.AutomaticSize.Y
 			}),
+			{
+				MakeElement("Stroke", theme.Stroke, 1.2),
+				MakeElement("Padding", 12, 12, 12, 12),
 
-			-- title in your main text color
-			SetProps(MakeElement("Label", NotificationConfig.Name, 15), {
-				Size          = UDim2.new(1, -30, 0, 20),
-				Position      = UDim2.new(0, 30, 0, 0),
-				Font          = Enum.Font.GothamBold,
-				TextColor3    = theme.Text,
-				Name          = "Title"
-			}),
+				SetProps(MakeElement("Image", NotificationConfig.Image), {
+					Size        = UDim2.new(0, 20, 0, 20),
+					ImageColor3 = theme.Text,
+					Name        = "Icon"
+				}),
 
-			-- content in your muted text
-			SetProps(MakeElement("Label", NotificationConfig.Content, 14), {
-				Size              = UDim2.new(1, 0, 0, 0),
-				Position          = UDim2.new(0, 0, 0, 25),
-				Font              = Enum.Font.GothamSemibold,
-				TextColor3        = theme.TextDark,
-				Name              = "Content",
-				AutomaticSize     = Enum.AutomaticSize.Y,
-				TextWrapped       = true
-			})
-		})
+				SetProps(MakeElement("Label", NotificationConfig.Name, 15), {
+					Size       = UDim2.new(1, -30, 0, 20),
+					Position   = UDim2.new(0, 30, 0, 0),
+					Font       = Enum.Font.GothamBold,
+					TextColor3 = theme.Text,
+					Name       = "Title"
+				}),
 
-		-- slide in with a clean Out easing
+				SetProps(MakeElement("Label", NotificationConfig.Content, 14), {
+					Size              = UDim2.new(1, 0, 0, 0),
+					Position          = UDim2.new(0, 0, 0, 25),
+					Font              = Enum.Font.GothamSemibold,
+					TextColor3        = theme.TextDark,
+					Name              = "Content",
+					AutomaticSize     = Enum.AutomaticSize.Y,
+					TextWrapped       = true
+				}),
+
+				-- timer label in top-right
+				SetProps(MakeElement("Label", string.format("%.1f", NotificationConfig.Time), 14), {
+					AnchorPoint            = Vector2.new(1, 0),
+					Position               = UDim2.new(1, -12, 0, 12),
+					Font                   = Enum.Font.GothamBold,
+					TextColor3             = theme.Text,
+					BackgroundTransparency = 1,
+					Name                   = "Timer"
+				})
+			}
+		)
+
+		-- countdown with one‐decimal precision (handles fractional Time)
+		spawn(function()
+			local remaining = NotificationConfig.Time
+			local step      = 0.1
+			while remaining > 0 do
+				NotificationFrame.Timer.Text = string.format("%.1f", remaining)
+				wait(step)
+				remaining = remaining - step
+				if remaining < 0 then remaining = 0 end
+			end
+			NotificationFrame.Timer.Text = "0.0"
+		end)
+
+		-- slide in with Back easing
 		TweenService:Create(
 			NotificationFrame,
 			TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
 			{ Position = UDim2.new(0, 0, 0, 0) }
 		):Play()
 
-		-- wait until it’s nearly time to go
 		wait(NotificationConfig.Time - 1)
 
-		-- fade icon & soften background in parallel with In easing
+		-- fade icon & background with Back easing
 		TweenService:Create(
 			NotificationFrame.Icon,
-			TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
+			TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In),
 			{ ImageTransparency = 1 }
 		):Play()
 		TweenService:Create(
 			NotificationFrame,
-			TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
+			TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.In),
 			{ BackgroundTransparency = 0.7 }
 		):Play()
 
 		wait(0.3)
 		TweenService:Create(
 			NotificationFrame.UIStroke,
-			TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
+			TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.In),
 			{ Transparency = 0.9 }
 		):Play()
 		TweenService:Create(
 			NotificationFrame.Title,
-			TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
+			TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.In),
 			{ TextTransparency = 0.4 }
 		):Play()
 		TweenService:Create(
 			NotificationFrame.Content,
-			TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
+			TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.In),
 			{ TextTransparency = 0.5 }
 		):Play()
 
 		wait(0.05)
-		-- slide out with matching In easing
+		-- slide out with Back easing
 		NotificationFrame:TweenPosition(
 			UDim2.new(1, 20, 0, 0),
 			Enum.EasingDirection.In,
-			Enum.EasingStyle.Quint,
+			Enum.EasingStyle.Back,
 			0.8,
 			true
 		)
