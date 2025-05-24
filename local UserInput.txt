@@ -407,7 +407,7 @@ function OrionLib:MakeNotification(NotificationConfig)
 		NotificationConfig.Image   = NotificationConfig.Image   or "rbxassetid://4384403532"
 		NotificationConfig.Time    = NotificationConfig.Time    or 15
 
-		local theme = OrionLib.Theme or OrionLib.Themes.Default
+		local theme = OrionLib.Theme or OrionLib.Themes.RitualDefault
 
 		local NotificationParent = SetProps(MakeElement("TFrame"), {
 			Size          = UDim2.new(1, 0, 0, 0),
