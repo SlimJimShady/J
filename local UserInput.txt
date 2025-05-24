@@ -11,16 +11,16 @@ local OrionLib = {
 	Connections = {},
 	Flags = {},
 	Themes = {
-		Default = {
-			Main = Color3.fromRGB(25, 25, 25),
-			Second = Color3.fromRGB(32, 32, 32),
-			Stroke = Color3.fromRGB(60, 60, 60),
-			Divider = Color3.fromRGB(60, 60, 60),
-			Text = Color3.fromRGB(240, 240, 240),
-			TextDark = Color3.fromRGB(150, 150, 150)
+		RitualDefault = {
+			Main = Color3.fromRGB(35, 0, 60),
+			Second = Color3.fromRGB(50, 15, 90),
+			Stroke = Color3.fromRGB(75, 30, 130),
+			Divider = Color3.fromRGB(75, 30, 130),
+			Text = Color3.fromRGB(245, 245, 255),
+			TextDark = Color3.fromRGB(180, 180, 200)
 		}
 	},
-	SelectedTheme = "Default",
+	SelectedTheme = "RitualDefault",
 	Folder = nil,
 	SaveCfg = false
 }
@@ -45,7 +45,7 @@ local function GetIcon(IconName)
 end   
 
 local Orion = Instance.new("ScreenGui")
-Orion.Name = "Orion"
+Orion.Name = "Ritual"
 if syn then
 	syn.protect_gui(Orion)
 	Orion.Parent = game.CoreGui
