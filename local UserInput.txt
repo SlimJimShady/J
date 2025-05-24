@@ -385,113 +385,101 @@ local NotificationHolder = SetProps(SetChildren(MakeElement("TFrame"), {
 	Parent = Orion
 })
 
-function OrionLib:MakeNotification(config)
+function OrionLib:MakeNotification(cfg)
     spawn(function()
-        -- apply defaults
-        local cfg = {
-            Name    = config.Name    or "Notification",
-            Content = config.Content or "Something happened",
-            Image   = config.Image   or "rbxassetid://4384403532",
-            Time    = config.Time    or 5,
-        }
-        local theme = self.Themes.Default
+        -- Apply defaults
+        cfg.Name    = cfg.Name    or "Notification"
+        cfg.Content = cfg.Content or "Test"
+        cfg.Image   = cfg.Image   or "rbxassetid://4384403532"
+        cfg.Time    = cfg.Time    or 5
 
-        -- ensure holder has a UIListLayout
-        if not self.NotificationHolder:FindFirstChildOfClass("UIListLayout") then
-            local layout = Instance.new("UIListLayout")
-            layout.SortOrder = Enum.SortOrder.LayoutOrder
-            layout.Padding = UDim.new(0, 8)
-            layout.Parent = self.NotificationHolder
-        end
+        -- Grab our purplish theme
+        local theme      = OrionLib.Themes.Default
+        local bgColor    = theme.Second
+        local strokeColor= theme.Stroke
+        local titleColor = theme.Text
+        local bodyColor  = theme.TextDark
 
-        -- wrapper frame (for auto‐sizing)
-        local wrapper = SetProps(MakeElement("TFrame"), {
-            Size            = UDim2.new(1, 0, 0, 0),
-            AutomaticSize   = Enum.AutomaticSize.Y,
-            BackgroundTransparency = 1,
-            LayoutOrder     = tick(),        -- newest on top
-            Parent          = self.NotificationHolder,
+        -- Holder automatically resizes vertically
+        local parentFrame = SetProps(MakeElement("TFrame"), {
+            Size              = UDim2.new(1,0,0,0),
+            AutomaticSize     = Enum.AutomaticSize.Y,
+            Parent            = self.NotificationHolder
         })
 
-        -- the actual notification
-        local notif = SetChildren(SetProps(MakeElement("RoundFrame", theme.Second, 0, 14), {
-            Size            = UDim2.new(1, 0, 0, 0),
-            Position        = UDim2.new(1, 0, 0, 0),  -- start off-screen
-            AutomaticSize   = Enum.AutomaticSize.Y,
+        -- The notification card
+        local card = MakeElement("RoundFrame", bgColor, 0, 12)
+        SetProps(card, {
+            Parent             = parentFrame,
+            Size               = UDim2.new(0.9, 0, 0, 0),
+            Position           = UDim2.new(1, 0, 0, 0),       -- start off-screen right
             BackgroundTransparency = 0,
-            Parent          = wrapper,
-        }), {
-            -- outline
-            SetProps(MakeElement("Stroke", theme.Divider, 1), {
-                Name = "UIStroke",
-            }),
-            -- padding
-            MakeElement("Padding", 16, 16, 16, 16),
-
-            -- icon
-            SetProps(MakeElement("Image", cfg.Image), {
-                Name            = "Icon",
-                Size            = UDim2.new(0, 24, 0, 24),
-                ImageColor3     = theme.Text,
-                ImageTransparency = 0,
-            }),
-
-            -- title
-            SetProps(MakeElement("Label", cfg.Name, 16), {
-                Name            = "Title",
-                Font            = Enum.Font.GothamBold,
-                TextColor3      = theme.Text,
-                TextTransparency = 0,
-                Size            = UDim2.new(1, -32, 0, 20),
-                Position        = UDim2.new(0, 32, 0, 0),
-                TextTruncate    = Enum.TextTruncate.AtEnd,
-            }),
-
-            -- content
-            SetProps(MakeElement("Label", cfg.Content, 14), {
-                Name             = "Content",
-                Font             = Enum.Font.GothamSemibold,
-                TextColor3       = theme.TextDark,
-                TextTransparency = 0,
-                AutomaticSize    = Enum.AutomaticSize.Y,
-                TextWrapped      = true,
-                Position         = UDim2.new(0, 0, 0, 26),
-                Size             = UDim2.new(1, 0, 0, 0),
-            }),
+            AutomaticSize      = Enum.AutomaticSize.Y,
+            ClipsDescendants   = true,
         })
 
-        -- slide in
-        TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0, 0, 0, 0)
+        -- Stroke outline
+        MakeElement("Stroke", strokeColor, 1.5):SetParent(card)
+
+        -- Inner padding
+        MakeElement("Padding", 16,16,16,16):SetParent(card)
+
+        -- Icon
+        local icon = MakeElement("Image", cfg.Image)
+        SetProps(icon, {
+            Size        = UDim2.new(0, 24, 0, 24),
+            ImageColor3 = titleColor,
+            AnchorPoint = Vector2.new(0, 0),
+            Position    = UDim2.new(0, 0, 0, 0),
+            Name        = "Icon",
+        }):SetParent(card)
+
+        -- Title
+        local title = MakeElement("Label", cfg.Name, 16)
+        SetProps(title, {
+            Size           = UDim2.new(1, -32, 0, 24),
+            Position       = UDim2.new(0, 32, 0, 0),
+            Font           = Enum.Font.GothamBold,
+            TextColor3     = titleColor,
+            TextTransparency = 0,
+            Name           = "Title",
+        }):SetParent(card)
+
+        -- Body text
+        local body = MakeElement("Label", cfg.Content, 14)
+        SetProps(body, {
+            Size              = UDim2.new(1, 0, 0, 0),
+            Position          = UDim2.new(0, 0, 0, 28),
+            Font              = Enum.Font.GothamSemibold,
+            TextColor3        = bodyColor,
+            TextWrapped       = true,
+            AutomaticSize     = Enum.AutomaticSize.Y,
+            TextTransparency  = 0,
+            Name              = "Content",
+        }):SetParent(card)
+
+        -- Animate in
+        TweenService:Create(card, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0.05, 0, 0, 0)
         }):Play()
 
-        -- hold
-        wait(cfg.Time)
+        -- Wait, then fade elements out
+        task.wait(cfg.Time)
+        TweenService:Create(icon, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {ImageTransparency = 1}):Play()
+        TweenService:Create(title, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {TextTransparency = 0.5}):Play()
+        TweenService:Create(body,  TweenInfo.new(0.6, Enum.EasingStyle.Quad), {TextTransparency = 0.6}):Play()
+        TweenService:Create(card,  TweenInfo.new(0.8, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
 
-        -- fade out elements
-        TweenService:Create(notif, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
-            BackgroundTransparency = 0.7
-        }):Play()
-        TweenService:Create(notif.UIStroke, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
-            Transparency = 1
-        }):Play()
-        TweenService:Create(notif.Icon, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
-            ImageTransparency = 1
-        }):Play()
-        TweenService:Create(notif.Title, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
-            TextTransparency = 1
-        }):Play()
-        TweenService:Create(notif.Content, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
-            TextTransparency = 1
-        }):Play()
+        -- Slide out
+        task.wait(0.8)
+        card:TweenPosition(UDim2.new(1, 0, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.6, true)
+        task.wait(0.7)
 
-        -- slide out and clean up
-        wait(0.2)
-        notif:TweenPosition(UDim2.new(1, 0, 0, 0), "In", "Quint", 0.3, true)
-        wait(0.5)
-        wrapper:Destroy()
+        -- Clean up
+        parentFrame:Destroy()
     end)
 end
+
 
 function OrionLib:Init()
 	if OrionLib.SaveCfg then	
